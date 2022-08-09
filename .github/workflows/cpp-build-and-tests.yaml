@@ -36,7 +36,7 @@ jobs:
         id: install_cc
         uses: rlalik/setup-cpp-compiler@v1.0
         with:
-          compiler: ${{ matrix.compiler }}
+          compiler: ${{ matrix.config.compiler }}
       - name: Check compiler
         shell: bash
         env:
