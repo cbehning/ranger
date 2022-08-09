@@ -1,0 +1,77 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [ "**" ] # [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+name: cpp-build-and-test
+
+jobs:
+  test-linux-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: ubuntu-20.04
+            compiler: [ gcc-7, gcc-8, gcc-9, gcc-10,
+                        clang-6, clang-7, clang-8, clang-9, clang-10 ]
+          - os: ubuntu-22.04
+            compiler: [ gcc-11, gcc-12,
+                        clang-11, clang-12, clang-13, clang-14 ]
+          - os: macos-latest
+            compiler: [ gcc-6, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11 ]
+          - os: windows-latest
+            compiler: [ gcc-6.4.0, gcc-7.3.0, gcc-8.5.0, gcc-9.4.0, gcc-10.3.0, gcc-11.2.0,
+                        clang-12.0.1, clang-13.0.1, clang-14.0.5 ]
+    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.config.os }} (${{ matrix.config.compiler }})
+
+    steps:
+      # setup
+      - name: Get minimum cmake version
+        uses: lukka/get-cmake@v3.16.9
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@v1.0
+        with:
+          compiler: ${{ matrix.compiler }}
+      - name: Check compiler
+        shell: bash
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          $CC --version
+          $CXX --version
+
+      # checkout
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # configure and compile
+      - name: Configure CMake
+        id: configure
+        working-directory: cpp_version
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: cmake -G Ninja .
+
+      - name: Compile
+        id: compile
+        working-directory: cpp_version
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: cmake --build .
+
+      # run tests
+      - name: Build and run unit tests
+        id: run_unit_tests
+        working-directory: cpp_version
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: cmake --build . --target check
