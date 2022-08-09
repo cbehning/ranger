@@ -31,7 +31,7 @@ jobs:
     steps:
       # setup
       - name: Get minimum cmake version
-        uses: lukka/get-cmake@v3.16.9
+        uses: lukka/get-cmake@v3.18.6
       - name: Install compiler
         id: install_cc
         uses: rlalik/setup-cpp-compiler@v1.0
