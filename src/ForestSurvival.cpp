@@ -9,6 +9,8 @@
  R package "ranger" under GPL3 license.
  #-------------------------------------------------------------------------------*/
 
+//info num_deaths werden in TreeSurvival::computeDeathCounts(size_t nodeID)  erzeugt
+
 #include <set>
 #include <algorithm>
 #include <cmath>
@@ -24,13 +26,23 @@ namespace ranger {
 void ForestSurvival::loadForest(size_t num_trees, std::vector<std::vector<std::vector<size_t>> >& forest_child_nodeIDs,
     std::vector<std::vector<size_t>>& forest_split_varIDs, std::vector<std::vector<double>>& forest_split_values,
     std::vector<std::vector<std::vector<double>> >& forest_chf, std::vector<double>& unique_timepoints,
-    std::vector<bool>& is_ordered_variable,
-    //TODO einfuegen
+    std::vector<bool>& is_ordered_variable
+    //todo, std::vector<bool>& competing_risk
+    //todo,  std::vector<book>& impute_sdw
     ) {
+    // todo A)  In case of competing risks & impute_sdw (subdistribution): Before creating trees: sample subdistribution times
+    /*-------------------------------------------------------------------------------
+     * if (competink_risk & impute_sdw){
+     * data = imputeSubdistribution()
+     * }
+
+    #-------------------------------------------------------------------------------*/
 
   this->num_trees = num_trees;
   this->unique_timepoints = unique_timepoints;
   data->setIsOrderedVariable(is_ordered_variable);
+
+
 
   // Create trees
   trees.reserve(num_trees);
@@ -268,6 +280,9 @@ void ForestSurvival::saveToFileInternal(std::ofstream& outfile) {
   saveVector1D(unique_timepoints, outfile);
 }
 
+
+
+
 void ForestSurvival::loadFromFileInternal(std::ifstream& infile) {
 
   // Read number of variables
@@ -334,5 +349,24 @@ size_t ForestSurvival::getTreePredictionTerminalNodeID(size_t tree_idx, size_t s
 }
 
 // #nocov end
+
+// todo: Neue Function einbauen, soll für jeden Tree aufgerufen werden
+void ForestSurvival::imputeSubdistribution() {
+    // sample using delta subdistribution weights of each ID
+
+    // replace time (dependent variable) with sampled times and !status %in% (0,1) -> replace with 0
+
+    // return updated data
+
+}
+
+void ForestSurvival::computeSubdistributionWeights() {
+    // compute subdistribution weights for !status %in% (0,1)
+
+    // A) return w_it
+    // B) return Delta w_it
+
+}
+
 
 }// namespace ranger

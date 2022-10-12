@@ -41,8 +41,15 @@ void Tree::init(const Data* data, uint mtry, size_t num_samples, uint seed, std:
     bool sample_with_replacement, bool memory_saving_splitting, SplitRule splitrule, std::vector<double>* case_weights,
     std::vector<size_t>* manual_inbag, bool keep_inbag, std::vector<double>* sample_fraction, double alpha,
     double minprop, bool holdout, uint num_random_splits, uint max_depth, std::vector<double>* regularization_factor,
-    bool regularization_usedepth, std::vector<bool>* split_varIDs_used) {
-
+    bool regularization_usedepth, std::vector<bool>* split_varIDs_used
+        //, std::vector<bool>& competing_risk
+        //,  std::vector<book>& impute_sdw
+        ) {
+//Version B) instead if imputation in Survival? Is it better to impute here?
+    /*  * if (competink_risk){
+ * data = imputeSubdistribution()
+ * }
+     * */
   this->data = data;
   this->mtry = mtry;
   this->num_samples = num_samples;
