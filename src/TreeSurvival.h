@@ -99,6 +99,18 @@ private:
 public:
   //new CB
   void computeCensoringCounts(size_t nodeID);
+
+    float getSubdistributionWeight(size_t t, size_t T) const {
+        if (t == 0)
+            return 1;
+        if (t < T)
+            return 1;
+        if (t > num_timepoints - 1)
+            throw std::runtime_error(
+                    "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
+        return (float(num_cens[t - 1]) / float(num_samples_at_risk[t - 1])) /
+               (float(num_cens[T - 1]) / float(num_samples_at_risk[T - 1]));
+    }
 private:
   // Unique time points for all individuals (not only this bootstrap), sorted
   const std::vector<double>* unique_timepoints;
