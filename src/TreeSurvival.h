@@ -90,12 +90,20 @@ private:
 
   void addImpurityImportance(size_t nodeID, size_t varID, double decrease);
 
-  void cleanUpInternal() override {
-    num_deaths.clear();
-    num_deaths.shrink_to_fit();
-    num_samples_at_risk.clear();
-    num_samples_at_risk.shrink_to_fit();
-  }
+    void cleanUpInternal() override {
+        num_deaths.clear();
+        num_deaths.shrink_to_fit();
+        num_samples_at_risk.clear();
+        num_samples_at_risk.shrink_to_fit();
+        num_cens.clear();
+        num_cens.shrink_to_fit();
+        num_not_cens.clear();
+        num_not_cens.shrink_to_fit();
+        num_samples_at_risk_mi.clear();
+        num_samples_at_risk_mi.shrink_to_fit();
+        num_samples_at_risk_cens.clear();
+        num_samples_at_risk_cens.shrink_to_fit();
+    }
 public:
   //new CB
   void computeCensoringCounts(size_t nodeID);
@@ -108,8 +116,8 @@ public:
         if (t > num_timepoints - 1)
             throw std::runtime_error(
                     "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
-        return (float(num_cens[t - 1]) / float(num_samples_at_risk[t - 1])) /
-               (float(num_cens[T - 1]) / float(num_samples_at_risk[T - 1]));
+        return (float(num_cens[t ]) / float(num_samples_at_risk_mi[t ])) /
+               (float(num_cens[T ]) / float(num_samples_at_risk_mi[T ]));
     }
 private:
   // Unique time points for all individuals (not only this bootstrap), sorted
@@ -124,6 +132,9 @@ private:
   std::vector<size_t> num_deaths;
   std::vector<size_t> num_samples_at_risk;
   std::vector<size_t> num_cens;
+  std::vector<size_t> num_not_cens;
+  std::vector<size_t> num_samples_at_risk_cens;
+  std::vector<double> num_samples_at_risk_mi;
 };
 
 } // namespace ranger

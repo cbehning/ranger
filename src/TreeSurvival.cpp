@@ -23,7 +23,7 @@ namespace ranger {
 
 TreeSurvival::TreeSurvival(std::vector<double>* unique_timepoints, std::vector<size_t>* response_timepointIDs) :
     unique_timepoints(unique_timepoints), response_timepointIDs(response_timepointIDs), num_deaths(0), num_samples_at_risk(
-        0), num_cens(0) {
+        0), num_cens(0), num_not_cens(0), num_samples_at_risk_mi(0), num_samples_at_risk_cens(0) {
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -31,7 +31,8 @@ TreeSurvival::TreeSurvival(std::vector<std::vector<size_t>>& child_nodeIDs, std:
     std::vector<double>& split_values, std::vector<std::vector<double>> chf, std::vector<double>* unique_timepoints,
     std::vector<size_t>* response_timepointIDs) :
     Tree(child_nodeIDs, split_varIDs, split_values), unique_timepoints(unique_timepoints), response_timepointIDs(
-        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0), num_cens(0) {
+        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0), num_cens(0), num_not_cens(0),
+        num_samples_at_risk_mi(0), num_samples_at_risk_cens(0) {
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -39,7 +40,11 @@ void TreeSurvival::allocateMemory() {
   // Number of deaths and samples at risk for each timepoint
   num_deaths.resize(num_timepoints);
   num_samples_at_risk.resize(num_timepoints);
-    num_cens.resize(num_timepoints);
+  num_samples_at_risk_mi.resize(num_timepoints); // number of samples at risk with mid-interval event
+  num_samples_at_risk_cens.resize(num_timepoints); // number at risk for beeing censored. As "event before cens", we substract events from initial calculation
+  num_cens.resize(num_timepoints);
+  num_not_cens.resize(num_timepoints);
+
 }
 
 void TreeSurvival::appendToFileInternal(std::ofstream& file) {  // #nocov start
@@ -970,6 +975,7 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
             num_samples_at_risk[i] = 0;
         }
 
+
         for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
             size_t sampleID = sampleIDs[pos];
             double survival_time = data->get_y(sampleID, 0);
@@ -988,13 +994,26 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                 }
             }
         }
-        float x = getSubdistributionWeight(5,7);
-        std::string out = "timepoint;cens;deaths;atrisk\n";
+
+        for (size_t t = 0; t < num_timepoints; ++t) {
+            if (t == num_timepoints - 1)
+                num_not_cens[t] = num_samples_at_risk[t];
+            else
+                num_not_cens[t] = num_samples_at_risk[t] - num_samples_at_risk[t + 1] - num_cens[t];
+
+            num_samples_at_risk_mi[t] = double(num_samples_at_risk[t]) - double(num_not_cens[t]) / 2.0;
+        }
+        float x = getSubdistributionWeight(8,5);
+        std::cout << std::to_string(x) << std::endl;
+
+        std::string out = "timepoint;atrisk;cens;deaths;notcens;atrisk_mi\n";
         for (size_t i = 0; i < num_timepoints; ++i) {
             out += std::to_string(i) + ";"
+                   + std::to_string(num_samples_at_risk[i]) + ";"
                    + std::to_string(num_cens[i]) + ";"
                    + std::to_string(num_deaths[i]) + ";"
-                   + std::to_string(num_samples_at_risk[i]) + "\n";
+                   + std::to_string(num_not_cens[i]) + ";"
+                   + std::to_string(num_samples_at_risk_mi[i]) + "\n";
 
         }
         std::cout << out << std::endl;
