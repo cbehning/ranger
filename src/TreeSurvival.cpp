@@ -994,22 +994,34 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                 }
             }
         }
-
+        // get number of individuals that are not censored
         for (size_t t = 0; t < num_timepoints; ++t) {
             if (t == num_timepoints - 1)
                 num_not_cens[t] = num_samples_at_risk[t];
             else
                 num_not_cens[t] = num_samples_at_risk[t] - num_samples_at_risk[t + 1] - num_cens[t];
-
-            num_samples_at_risk_mi[t] = double(num_samples_at_risk[t]) - double(num_not_cens[t]) / 2.0;
         }
+        // We assume "event before censoring", thus someone with an observed event in an interval cannot be censored
+        // in the same interval. Thus we have to remove all individuals with event in the first interval from the life table
+        // estimate of the censoring survival time. The same procesdure is applied in the R package discSurv::dataCensoringShort()
+
+        for (size_t t = 0; t < num_timepoints; ++t) {
+            num_samples_at_risk_cens[t] = num_samples_at_risk[t] - num_not_cens[t];
+            if (t == num_timepoints - 1)
+                num_samples_at_risk_mi[t] = 0.0;
+            else
+            num_samples_at_risk_mi[t] = double(num_samples_at_risk_cens[t]) - double(num_not_cens[t+1]) / 2.0;
+        }
+
+
         float x = getSubdistributionWeight(8,5);
         std::cout << std::to_string(x) << std::endl;
 
-        std::string out = "timepoint;atrisk;cens;deaths;notcens;atrisk_mi\n";
+        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi\n";
         for (size_t i = 0; i < num_timepoints; ++i) {
             out += std::to_string(i) + ";"
                    + std::to_string(num_samples_at_risk[i]) + ";"
+                   + std::to_string(num_samples_at_risk_cens[i]) + ";"
                    + std::to_string(num_cens[i]) + ";"
                    + std::to_string(num_deaths[i]) + ";"
                    + std::to_string(num_not_cens[i]) + ";"
