@@ -96,7 +96,10 @@ private:
     num_samples_at_risk.clear();
     num_samples_at_risk.shrink_to_fit();
   }
-
+public:
+  //new CB
+  void computeCensoringCounts(size_t nodeID);
+private:
   // Unique time points for all individuals (not only this bootstrap), sorted
   const std::vector<double>* unique_timepoints;
   size_t num_timepoints;
@@ -108,6 +111,7 @@ private:
   // Fields to save to while tree growing
   std::vector<size_t> num_deaths;
   std::vector<size_t> num_samples_at_risk;
+  std::vector<size_t> num_cens;
 };
 
 } // namespace ranger

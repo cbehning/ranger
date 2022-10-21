@@ -52,7 +52,10 @@ private:
   void writePredictionFile() override;
   void saveToFileInternal(std::ofstream& outfile) override;
   void loadFromFileInternal(std::ifstream& infile) override;
-
+public:
+  virtual void imputeCensoringSubdistribution();
+  virtual void computeSubdistributionWeights();
+private:
   std::vector<double> unique_timepoints;
   std::vector<size_t> response_timepointIDs;
 

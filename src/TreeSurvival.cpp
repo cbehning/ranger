@@ -23,7 +23,7 @@ namespace ranger {
 
 TreeSurvival::TreeSurvival(std::vector<double>* unique_timepoints, std::vector<size_t>* response_timepointIDs) :
     unique_timepoints(unique_timepoints), response_timepointIDs(response_timepointIDs), num_deaths(0), num_samples_at_risk(
-        0) {
+        0), num_cens(0) {
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -31,7 +31,7 @@ TreeSurvival::TreeSurvival(std::vector<std::vector<size_t>>& child_nodeIDs, std:
     std::vector<double>& split_values, std::vector<std::vector<double>> chf, std::vector<double>* unique_timepoints,
     std::vector<size_t>* response_timepointIDs) :
     Tree(child_nodeIDs, split_varIDs, split_values), unique_timepoints(unique_timepoints), response_timepointIDs(
-        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0) {
+        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0), num_cens(0) {
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -39,6 +39,7 @@ void TreeSurvival::allocateMemory() {
   // Number of deaths and samples at risk for each timepoint
   num_deaths.resize(num_timepoints);
   num_samples_at_risk.resize(num_timepoints);
+    num_cens.resize(num_timepoints);
 }
 
 void TreeSurvival::appendToFileInternal(std::ofstream& file) {  // #nocov start
@@ -61,10 +62,17 @@ void TreeSurvival::createEmptyNodeInternal() {
 }
 
 void TreeSurvival::computeSurvival(size_t nodeID) {
+    //  Function to compute cumulative hazard function
+    // ?? where is it used? Only in (root) nodes?
+    // initialize vector
   std::vector<double> chf_temp;
+  // make vector of the same size as the number of unique time intervals (time_points)
+  // ??: where is num_timepoints created?
   chf_temp.reserve(num_timepoints);
+  // initialize the cumulative hazard funtion value with zero
   double chf_value = 0;
   for (size_t i = 0; i < num_timepoints; ++i) {
+      // for each time point compute chf as chf(t) = chf(t-1) + num_deaths(t)/num_samples_at_risk(i)
     if (num_samples_at_risk[i] != 0) {
       chf_value += (double) num_deaths[i] / (double) num_samples_at_risk[i];
     }
@@ -946,4 +954,33 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
   }
 }
 
+// The following is adapted from computeDeathCounts to create the "censoring survival function as in discsurv
+    void TreeSurvival::computeCensoringCounts(size_t nodeID) {
+    // TODO: write test case
+
+        // Initialize
+        for (size_t i = 0; i < num_timepoints; ++i) {
+            num_cens[i] = 0;
+            num_samples_at_risk[i] = 0;
+        }
+
+        for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
+            size_t sampleID = sampleIDs[pos];
+            double survival_time = data->get_y(sampleID, 0);
+
+            size_t t = 0;
+            while (t < num_timepoints && (*unique_timepoints)[t] < survival_time) {
+                ++num_samples_at_risk[t];
+                ++t;
+            }
+
+            // Now t is the censoring time, add to at risk and to censoring if death
+            if (t < num_timepoints) {
+                ++num_samples_at_risk[t];
+                if (data->get_y(sampleID, 1) == 0) { // 0=cens, 1 = event of interest
+                    ++num_cens[t];
+                }
+            }
+        }
+    }
 } // namespace ranger

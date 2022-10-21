@@ -351,7 +351,7 @@ size_t ForestSurvival::getTreePredictionTerminalNodeID(size_t tree_idx, size_t s
 // #nocov end
 
 // todo: Neue Function einbauen, soll für jeden Tree aufgerufen werden
-void ForestSurvival::imputeSubdistribution() {
+void ForestSurvival::imputeCensoringSubdistribution() {
     // sample using delta subdistribution weights of each ID
 
     // replace time (dependent variable) with sampled times and !status %in% (0,1) -> replace with 0
