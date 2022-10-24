@@ -114,6 +114,12 @@ void Tree::grow(std::vector<double>* variable_importance) {
       bootstrapWithoutReplacement();
     }
   }
+  // TODO: daten hier austauschen
+  // TODO: cr = impute subidst and treetype suvival
+  // if (cr_impute_subdist)
+  std::unique_ptr<Data> imputed_data = impute_cr_using_subdistribution_weights();
+  Data const *original_data = data;
+  data = imputed_data.get();
 
   // Init start and end positions
   start_pos[0] = 0;
@@ -144,6 +150,8 @@ void Tree::grow(std::vector<double>* variable_importance) {
   sampleIDs.clear();
   sampleIDs.shrink_to_fit();
   cleanUpInternal();
+  // TODO: if cr = impute subidst and treetype suvival
+  data = original_data;
 }
 
 void Tree::predict(const Data* prediction_data, bool oob_prediction) {
@@ -605,5 +613,11 @@ void Tree::setManualInbag() {
     inbag_counts.shrink_to_fit();
   }
 }
+
+    std::unique_ptr<Data> Tree::impute_cr_using_subdistribution_weights() {
+        // TODO: call destructor manually
+
+        return {};
+    }
 
 } // namespace ranger

@@ -477,6 +477,7 @@ void Forest::grow() {
       tree_manual_inbag = &manual_inbag[0];
     }
 
+    // TODO: we might need to change data here?
     trees[i]->init(data.get(), mtry, num_samples, tree_seed, &deterministic_varIDs, tree_split_select_weights,
         importance_mode, min_node_size, sample_with_replacement, memory_saving_splitting, splitrule, &case_weights,
         tree_manual_inbag, keep_inbag, &sample_fraction, alpha, minprop, holdout, num_random_splits, max_depth,

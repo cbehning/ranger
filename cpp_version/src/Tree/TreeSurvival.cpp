@@ -987,7 +987,7 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                 ++t;
             }
 
-            // Now t is the censoring time, add to at risk and to censoring if death
+            // Now t is the censoring time, add to at risk and to censoring if censoring happens
             if (t < num_timepoints) {
                 ++cr_num_samples_at_risk[t];
                 if (int(data->get_y(sampleID, 1)) == 0) { // 0=cens, 1 = event of interest

@@ -229,6 +229,8 @@ protected:
   uint depth;
   size_t last_left_nodeID;
   bool cr_impute_subdist;
+
+    std::unique_ptr<Data>  impute_cr_using_subdistribution_weights();
 };
 
 } // namespace ranger
