@@ -95,10 +95,6 @@ private:
         num_deaths.shrink_to_fit();
         num_samples_at_risk.clear();
         num_samples_at_risk.shrink_to_fit();
-        num_cens.clear();
-        num_cens.shrink_to_fit();
-        num_samples_at_risk_mi.clear();
-        num_samples_at_risk_mi.shrink_to_fit();
         cens_surv.clear();
         cens_surv.shrink_to_fit();
     }
@@ -131,8 +127,6 @@ private:
   std::vector<size_t> num_deaths;
   std::vector<size_t> num_samples_at_risk;
   // only for sampling censoring times when competing event happen in root node
-  std::vector<size_t> num_cens;
-  std::vector<double> num_samples_at_risk_mi;
   std::vector<double> cens_surv;
 };
 
