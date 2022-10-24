@@ -964,7 +964,7 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
         // TODO: write test case
         // Initialize
         // number of censorings after first interval
-        std::vector<size_t> cr_num_cens = std::vector<size_t>(num_timepoints, 0);
+        std::vector<size_t> cr_num_cens(num_timepoints, 0);
         // number of samples at risk
         std::vector<size_t> cr_num_samples_at_risk(num_timepoints, 0);
         // number at risk for beeing censored. As "event before cens", we substract events from initial calculation
@@ -978,11 +978,11 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
 
 
         for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
-            size_t sampleID = sampleIDs[pos];
-            double survival_time = data->get_y(sampleID, 0);
+            size_t const sampleID = sampleIDs[pos];
+            double const censoring_time = data->get_y(sampleID, 0);
 
             size_t t = 0;
-            while (t < num_timepoints && (*unique_timepoints)[t] < survival_time) {
+            while (t < num_timepoints && (*unique_timepoints)[t] < censoring_time) {
                 ++cr_num_samples_at_risk[t];
                 ++t;
             }
@@ -990,7 +990,7 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
             // Now t is the censoring time, add to at risk and to censoring if death
             if (t < num_timepoints) {
                 ++cr_num_samples_at_risk[t];
-                if (data->get_y(sampleID, 1) == 0) { // 0=cens, 1 = event of interest
+                if (int(data->get_y(sampleID, 1)) == 0) { // 0=cens, 1 = event of interest
                     ++cr_num_cens[t];
                 }
             }

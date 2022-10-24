@@ -34,7 +34,7 @@ Forest::Forest() :
         false), splitrule(DEFAULT_SPLITRULE), predict_all(false), keep_inbag(false), sample_fraction( { 1 }), holdout(
         false), prediction_type(DEFAULT_PREDICTIONTYPE), num_random_splits(DEFAULT_NUM_RANDOM_SPLITS), max_depth(
         DEFAULT_MAXDEPTH), alpha(DEFAULT_ALPHA), minprop(DEFAULT_MINPROP), num_threads(DEFAULT_NUM_THREADS), data { }, overall_prediction_error(
-    NAN), importance_mode(DEFAULT_IMPORTANCE_MODE), regularization_usedepth(false), progress(0), cr_impute_subdist(false) {
+    NAN), importance_mode(DEFAULT_IMPORTANCE_MODE), regularization_usedepth(false), cr_impute_subdist(false), progress(0) {
 }
 
 // #nocov start

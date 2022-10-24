@@ -102,7 +102,7 @@ public:
   //new CB
   void computeCensoringCounts(size_t nodeID);
 
-    float getSubdistributionWeight(size_t t, size_t T) const {
+    double getSubdistributionWeight(size_t t, size_t T) const {
         if (t == 0)
             return 1;
         if (t < T)
@@ -110,10 +110,9 @@ public:
         if (t > num_timepoints - 1)
             throw std::runtime_error(
                     "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
-        return cens_surv[t-1] /
-               cens_surv[T-1];
+        return cens_surv[t-1] / cens_surv[T-1];
     }
-    float getDeltaSubdistributionWeight(size_t t, size_t T) const {
+    double getDeltaSubdistributionWeight(size_t t, size_t T) const {
         // the delta of the subdistibution weight is used as weight to sample censoring times
         // in case of competing risks
         if (t == 0)
