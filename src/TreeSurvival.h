@@ -119,6 +119,17 @@ public:
         return (float(num_cens[t ]) / float(num_samples_at_risk_mi[t ])) /
                (float(num_cens[T ]) / float(num_samples_at_risk_mi[T ]));
     }
+
+    //new CB
+    float getCenshaz(size_t t) const {
+        if (t > num_timepoints - 1)
+            throw std::runtime_error(
+                    "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
+        if ( num_samples_at_risk_mi[t]  <= 0.000000001)
+            return 0.0;
+        return (float(num_cens[t]) / num_samples_at_risk_mi[t]);
+    }
+
 private:
   // Unique time points for all individuals (not only this bootstrap), sorted
   const std::vector<double>* unique_timepoints;
@@ -135,6 +146,7 @@ private:
   std::vector<size_t> num_not_cens;
   std::vector<size_t> num_samples_at_risk_cens;
   std::vector<double> num_samples_at_risk_mi;
+  std::vector<double> cens_Surv;
 };
 
 } // namespace ranger

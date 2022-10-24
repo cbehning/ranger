@@ -972,6 +972,9 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
         // Initialize
         for (size_t i = 0; i < num_timepoints; ++i) {
             num_cens[i] = 0;
+            // Todo: num_samples_at_risk wird aktuell "global" überschrieben, das sollte es nicht.
+            // A) neue Variable definieren
+            // B) Variable nur in Funktion definieren?
             num_samples_at_risk[i] = 0;
         }
 
@@ -1009,15 +1012,18 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
             num_samples_at_risk_cens[t] = num_samples_at_risk[t] - num_not_cens[t];
             if (t == num_timepoints - 1)
                 num_samples_at_risk_mi[t] = 0.0;
-            else
-            num_samples_at_risk_mi[t] = double(num_samples_at_risk_cens[t]) - double(num_not_cens[t+1]) / 2.0;
+            else {
+                // do the time interval shift (due to event before censoring,
+                num_not_cens[t] = num_not_cens[t + 1];
+                num_samples_at_risk_mi[t] = double(num_samples_at_risk_cens[t]) - double(num_not_cens[t]) / 2.0;
+            }
         }
 
 
-        float x = getSubdistributionWeight(8,5);
+        float x = getSubdistributionWeight(8,2);
         std::cout << std::to_string(x) << std::endl;
 
-        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi\n";
+        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz\n";
         for (size_t i = 0; i < num_timepoints; ++i) {
             out += std::to_string(i) + ";"
                    + std::to_string(num_samples_at_risk[i]) + ";"
@@ -1025,7 +1031,8 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                    + std::to_string(num_cens[i]) + ";"
                    + std::to_string(num_deaths[i]) + ";"
                    + std::to_string(num_not_cens[i]) + ";"
-                   + std::to_string(num_samples_at_risk_mi[i]) + "\n";
+                   + std::to_string(num_samples_at_risk_mi[i]) + ";"
+                   + std::to_string(getCenshaz(i)) + "\n";
 
         }
         std::cout << out << std::endl;
