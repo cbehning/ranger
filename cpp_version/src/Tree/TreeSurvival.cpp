@@ -338,7 +338,7 @@ void TreeSurvival::computeDeathCounts(size_t nodeID) {
       }
     }
   }
-  std::cerr << "deathcount" << std::endl;
+  //std::cerr << "deathcount" << std::endl;
 }
 
 void TreeSurvival::computeChildDeathCounts(size_t nodeID, size_t varID, std::vector<double>& possible_split_values,
