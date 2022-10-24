@@ -113,6 +113,18 @@ public:
         return cens_surv[t-1] /
                cens_surv[T-1];
     }
+    float getDeltaSubdistributionWeight(size_t t, size_t T) const {
+        // the delta of the subdistibution weight is used as weight to sample censoring times
+        // in case of competing risks
+        if (t == 0)
+            return 0.0;
+        if (t < T)
+            return 0.0;
+        if (t > num_timepoints - 1)
+            throw std::runtime_error(
+                    "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
+        return getSubdistributionWeight(t-1,T) - getSubdistributionWeight(t,T);
+    }
 
 private:
   // Unique time points for all individuals (not only this bootstrap), sorted

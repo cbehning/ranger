@@ -84,6 +84,7 @@ public:
   uint seed;
   std::vector<double> regcoef;
   bool usedepth;
+  bool cr_impute_subdist;
 
 private:
   // Display messages

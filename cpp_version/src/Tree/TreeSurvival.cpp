@@ -64,12 +64,9 @@ void TreeSurvival::createEmptyNodeInternal() {
 }
 
 void TreeSurvival::computeSurvival(size_t nodeID) {
-    //  Function to compute cumulative hazard function
-    // ?? where is it used? Only in (root) nodes?
-    // initialize vector
+
   std::vector<double> chf_temp;
-  // make vector of the same size as the number of unique time intervals (time_points)
-  // ??: where is num_timepoints created?
+
   chf_temp.reserve(num_timepoints);
   // initialize the cumulative hazard funtion value with zero
   double chf_value = 0;
@@ -1039,6 +1036,9 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
 
         float x = getSubdistributionWeight(8,5);
         std::cout << std::to_string(x) << std::endl;
+
+        float x1 = getDeltaSubdistributionWeight(8,5);
+        std::cout << std::to_string(x1) << std::endl;
 
         std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz;cS\n";
         for (size_t i = 0; i < num_timepoints; ++i) {

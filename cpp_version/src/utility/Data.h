@@ -33,6 +33,7 @@ public:
 
   virtual double get_x(size_t row, size_t col) const = 0;
   virtual double get_y(size_t row, size_t col) const = 0;
+  // get_subdist_imputed_y
 
   size_t getVariableID(const std::string& variable_name) const;
 

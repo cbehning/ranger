@@ -27,12 +27,11 @@ void ForestSurvival::loadForest(size_t num_trees, std::vector<std::vector<std::v
     std::vector<std::vector<size_t>>& forest_split_varIDs, std::vector<std::vector<double>>& forest_split_values,
     std::vector<std::vector<std::vector<double>> >& forest_chf, std::vector<double>& unique_timepoints,
     std::vector<bool>& is_ordered_variable
-    //todo, std::vector<bool>& competing_risk
-    //todo,  std::vector<book>& impute_sdw
+
     ) {
-    // todo A)  In case of competing risks & impute_sdw (subdistribution): Before creating trees: sample subdistribution times
+    // todo where should the subdistribution weight be imputed?
     /*-------------------------------------------------------------------------------
-     * if (competink_risk & impute_sdw){
+     * if (cr_impute_subdist){
      * data = imputeSubdistribution()
      * }
 

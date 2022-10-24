@@ -41,7 +41,8 @@ public:
       std::vector<double>* case_weights, std::vector<size_t>* manual_inbag, bool keep_inbag,
       std::vector<double>* sample_fraction, double alpha, double minprop, bool holdout, uint num_random_splits,
       uint max_depth, std::vector<double>* regularization_factor, bool regularization_usedepth,
-      std::vector<bool>* split_varIDs_used);
+      std::vector<bool>* split_varIDs_used,
+      bool cr_impute_subdist);
 
   virtual void allocateMemory() = 0;
 
@@ -227,6 +228,7 @@ protected:
   uint max_depth;
   uint depth;
   size_t last_left_nodeID;
+  bool cr_impute_subdist;
 };
 
 } // namespace ranger
