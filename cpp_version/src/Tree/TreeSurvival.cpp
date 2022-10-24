@@ -23,7 +23,7 @@ namespace ranger {
 
 TreeSurvival::TreeSurvival(std::vector<double>* unique_timepoints, std::vector<size_t>* response_timepointIDs) :
     unique_timepoints(unique_timepoints), response_timepointIDs(response_timepointIDs), num_deaths(0), num_samples_at_risk(
-        0), num_cens(0), num_not_cens(0), num_samples_at_risk_mi(0), num_samples_at_risk_cens(0) {
+        0), num_cens(0), num_samples_at_risk_mi(0) {
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -31,8 +31,8 @@ TreeSurvival::TreeSurvival(std::vector<std::vector<size_t>>& child_nodeIDs, std:
     std::vector<double>& split_values, std::vector<std::vector<double>> chf, std::vector<double>* unique_timepoints,
     std::vector<size_t>* response_timepointIDs) :
     Tree(child_nodeIDs, split_varIDs, split_values), unique_timepoints(unique_timepoints), response_timepointIDs(
-        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0), num_cens(0), num_not_cens(0),
-        num_samples_at_risk_mi(0), num_samples_at_risk_cens(0) {
+        response_timepointIDs), chf(chf), num_deaths(0), num_samples_at_risk(0), num_cens(0),
+        num_samples_at_risk_mi(0){
   this->num_timepoints = unique_timepoints->size();
 }
 
@@ -41,9 +41,8 @@ void TreeSurvival::allocateMemory() {
   num_deaths.resize(num_timepoints);
   num_samples_at_risk.resize(num_timepoints);
   num_samples_at_risk_mi.resize(num_timepoints); // number of samples at risk with mid-interval event
-  num_samples_at_risk_cens.resize(num_timepoints); // number at risk for beeing censored. As "event before cens", we substract events from initial calculation
   num_cens.resize(num_timepoints);
-  num_not_cens.resize(num_timepoints);
+  cens_surv.resize(num_timepoints);
 
 }
 
@@ -967,17 +966,16 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
 
 // The following is adapted from computeDeathCounts to create the "censoring survival function as in discsurv
     void TreeSurvival::computeCensoringCounts(size_t nodeID) {
-    // TODO: write test case
-
+        // TODO: write test case
         // Initialize
-        for (size_t i = 0; i < num_timepoints; ++i) {
-            num_cens[i] = 0;
-            // Todo: num_samples_at_risk wird aktuell "global" überschrieben, das sollte es nicht.
-            // A) neue Variable definieren
-            // B) Variable nur in Funktion definieren?
-            num_samples_at_risk[i] = 0;
-        }
-
+        std::vector<size_t> cr_num_samples_at_risk(num_timepoints, 0);
+        // number at risk for beeing censored. As "event before cens", we substract events from initial calculation
+        std::vector<size_t> cr_num_samples_at_risk_cens(num_timepoints, 0);
+        // number of individuals with any event in time interval
+        std::vector<size_t> cr_num_not_cens(num_timepoints, 0);
+        //hazard of the 'censoring survival'
+        std::vector<double> cens_haz(num_timepoints, 0);
+        num_cens = std::vector<size_t>(num_timepoints, 0);
 
         for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
             size_t sampleID = sampleIDs[pos];
@@ -985,13 +983,13 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
 
             size_t t = 0;
             while (t < num_timepoints && (*unique_timepoints)[t] < survival_time) {
-                ++num_samples_at_risk[t];
+                ++cr_num_samples_at_risk[t];
                 ++t;
             }
 
             // Now t is the censoring time, add to at risk and to censoring if death
             if (t < num_timepoints) {
-                ++num_samples_at_risk[t];
+                ++cr_num_samples_at_risk[t];
                 if (data->get_y(sampleID, 1) == 0) { // 0=cens, 1 = event of interest
                     ++num_cens[t];
                 }
@@ -1000,39 +998,56 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
         // get number of individuals that are not censored
         for (size_t t = 0; t < num_timepoints; ++t) {
             if (t == num_timepoints - 1)
-                num_not_cens[t] = num_samples_at_risk[t];
+                cr_num_not_cens[t] = cr_num_samples_at_risk[t];
             else
-                num_not_cens[t] = num_samples_at_risk[t] - num_samples_at_risk[t + 1] - num_cens[t];
+                cr_num_not_cens[t] = cr_num_samples_at_risk[t] - cr_num_samples_at_risk[t + 1] - num_cens[t];
         }
         // We assume "event before censoring", thus someone with an observed event in an interval cannot be censored
         // in the same interval. Thus we have to remove all individuals with event in the first interval from the life table
         // estimate of the censoring survival time. The same procesdure is applied in the R package discSurv::dataCensoringShort()
 
         for (size_t t = 0; t < num_timepoints; ++t) {
-            num_samples_at_risk_cens[t] = num_samples_at_risk[t] - num_not_cens[t];
+            cr_num_samples_at_risk_cens[t] = cr_num_samples_at_risk[t] - cr_num_not_cens[t];
             if (t == num_timepoints - 1)
                 num_samples_at_risk_mi[t] = 0.0;
             else {
                 // do the time interval shift (due to event before censoring,
-                num_not_cens[t] = num_not_cens[t + 1];
-                num_samples_at_risk_mi[t] = double(num_samples_at_risk_cens[t]) - double(num_not_cens[t]) / 2.0;
+                cr_num_not_cens[t] = cr_num_not_cens[t + 1];
+                num_samples_at_risk_mi[t] = double(cr_num_samples_at_risk_cens[t]) - double(cr_num_not_cens[t]) / 2.0;
             }
         }
 
+        // TODO: compute censoring hazard
+        for (size_t t = 0; t < num_timepoints; ++t) {
+            if(num_samples_at_risk_mi[t]<= 0.000000001)
+                cens_haz[t] = 0.0;
+            else
+                cens_haz[t] =  float(num_cens[t]) / num_samples_at_risk_mi[t];
+        }
 
-        float x = getSubdistributionWeight(8,2);
+        // TODO: compute censoring survival
+        for (size_t t = 0; t < num_timepoints; ++t) {
+            if(t == 0)
+                cens_surv[t] = 1.0;
+            else
+                cens_surv[t] = cens_surv[t-1] * (1.0 - cens_haz[t-1]);
+        }
+
+
+        float x = getSubdistributionWeight(8,5);
         std::cout << std::to_string(x) << std::endl;
 
-        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz\n";
+        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz;cS\n";
         for (size_t i = 0; i < num_timepoints; ++i) {
             out += std::to_string(i) + ";"
-                   + std::to_string(num_samples_at_risk[i]) + ";"
-                   + std::to_string(num_samples_at_risk_cens[i]) + ";"
+                   + std::to_string(cr_num_samples_at_risk[i]) + ";"
+                   + std::to_string(cr_num_samples_at_risk_cens[i]) + ";"
                    + std::to_string(num_cens[i]) + ";"
                    + std::to_string(num_deaths[i]) + ";"
-                   + std::to_string(num_not_cens[i]) + ";"
+                   + std::to_string(cr_num_not_cens[i]) + ";"
                    + std::to_string(num_samples_at_risk_mi[i]) + ";"
-                   + std::to_string(getCenshaz(i)) + "\n";
+                   + std::to_string(cens_haz[i]) + ";"
+                   + std::to_string(cens_surv[i]) + "\n";
 
         }
         std::cout << out << std::endl;

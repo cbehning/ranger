@@ -97,12 +97,10 @@ private:
         num_samples_at_risk.shrink_to_fit();
         num_cens.clear();
         num_cens.shrink_to_fit();
-        num_not_cens.clear();
-        num_not_cens.shrink_to_fit();
         num_samples_at_risk_mi.clear();
         num_samples_at_risk_mi.shrink_to_fit();
-        num_samples_at_risk_cens.clear();
-        num_samples_at_risk_cens.shrink_to_fit();
+        cens_surv.clear();
+        cens_surv.shrink_to_fit();
     }
 public:
   //new CB
@@ -116,18 +114,8 @@ public:
         if (t > num_timepoints - 1)
             throw std::runtime_error(
                     "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
-        return (float(num_cens[t ]) / float(num_samples_at_risk_mi[t ])) /
-               (float(num_cens[T ]) / float(num_samples_at_risk_mi[T ]));
-    }
-
-    //new CB
-    float getCenshaz(size_t t) const {
-        if (t > num_timepoints - 1)
-            throw std::runtime_error(
-                    "t must be smaller than (num_timepoints - 1) to calculate a subdistribution weight.");
-        if ( num_samples_at_risk_mi[t]  <= 0.000000001)
-            return 0.0;
-        return (float(num_cens[t]) / num_samples_at_risk_mi[t]);
+        return cens_surv[t-1] /
+               cens_surv[T-1];
     }
 
 private:
@@ -142,11 +130,10 @@ private:
   // Fields to save to while tree growing
   std::vector<size_t> num_deaths;
   std::vector<size_t> num_samples_at_risk;
+  // only for sampling censoring times when competing event happen in root node
   std::vector<size_t> num_cens;
-  std::vector<size_t> num_not_cens;
-  std::vector<size_t> num_samples_at_risk_cens;
   std::vector<double> num_samples_at_risk_mi;
-  std::vector<double> cens_Surv;
+  std::vector<double> cens_surv;
 };
 
 } // namespace ranger
