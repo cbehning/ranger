@@ -125,6 +125,13 @@ public:
         return getSubdistributionWeight(t-1,T) - getSubdistributionWeight(t,T);
     }
 
+    double get_y_from_data(size_t sampleID, size_t col) const {
+        if (this->cr_impute_subdist)
+            return double(1.0); // TODO: used changed y values
+        else
+            return data->get_y(sampleID, col);
+    };
+
 private:
   // Unique time points for all individuals (not only this bootstrap), sorted
   const std::vector<double>* unique_timepoints;
@@ -139,6 +146,8 @@ private:
   std::vector<size_t> num_samples_at_risk;
   // only for sampling censoring times when competing event happen in root node
   std::vector<double> cens_surv;
+
+  std::vector<std::array<double, 2>> y_cr;
 };
 
 } // namespace ranger

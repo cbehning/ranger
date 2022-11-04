@@ -101,8 +101,8 @@ bool TreeSurvival::splitNodeInternal(size_t nodeID, std::vector<size_t>& possibl
   double pure_status = 0;
   for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
     size_t sampleID = sampleIDs[pos];
-    double time = data->get_y(sampleID, 0);
-    double status = data->get_y(sampleID, 1);
+    double time = get_y_from_data(sampleID, 0);
+    double status = get_y_from_data(sampleID, 1);
     if (pos != start_pos[nodeID] && (time != pure_time || status != pure_status)) {
       pure = false;
       break;
@@ -202,8 +202,8 @@ bool TreeSurvival::findBestSplitMaxstat(size_t nodeID, std::vector<size_t>& poss
   status.reserve(num_samples_node);
   for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
     size_t sampleID = sampleIDs[pos];
-    time.push_back(data->get_y(sampleID, 0));
-    status.push_back(data->get_y(sampleID, 1));
+    time.push_back(get_y_from_data(sampleID, 0));
+    status.push_back(get_y_from_data(sampleID, 1));
   }
   std::vector<double> scores = logrankScores(time, status);
 
@@ -319,7 +319,7 @@ void TreeSurvival::computeDeathCounts(size_t nodeID) {
 
   for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
     size_t sampleID = sampleIDs[pos];
-    double survival_time = data->get_y(sampleID, 0);
+    double survival_time = get_y_from_data(sampleID, 0);
 
     size_t t = 0;
     while (t < num_timepoints && (*unique_timepoints)[t] < survival_time) {
@@ -330,7 +330,7 @@ void TreeSurvival::computeDeathCounts(size_t nodeID) {
     // Now t is the survival time, add to at risk and to death if death
     if (t < num_timepoints) {
       ++num_samples_at_risk[t];
-      if (data->get_y(sampleID, 1) == 1) {
+      if (get_y_from_data(sampleID, 1) == 1) {
         ++num_deaths[t];
       }
     }
@@ -354,7 +354,7 @@ void TreeSurvival::computeChildDeathCounts(size_t nodeID, size_t varID, std::vec
       if (value > possible_split_values[i]) {
         ++num_samples_right_child[i];
         ++delta_samples_at_risk_right_child[i * num_timepoints + survival_timeID];
-        if (data->get_y(sampleID, 1) == 1) {
+        if (get_y_from_data(sampleID, 1) == 1) {
           ++num_deaths_right_child[i * num_timepoints + survival_timeID];
         }
       } else {
@@ -493,7 +493,7 @@ void TreeSurvival::findBestSplitValueLogRankUnordered(size_t nodeID, size_t varI
       if ((splitID & (1ULL << factorID))) {
         ++num_samples_right_child;
         ++delta_samples_at_risk_right_child[survival_timeID];
-        if (data->get_y(sampleID, 1) == 1) {
+        if (get_y_from_data(sampleID, 1) == 1) {
           ++num_deaths_right_child[survival_timeID];
         }
       }
@@ -566,8 +566,8 @@ void TreeSurvival::findBestSplitValueAUC(size_t nodeID, size_t varID, double& be
   // For all pairs
   for (size_t k = start_pos[nodeID]; k < end_pos[nodeID]; ++k) {
     size_t sample_k = sampleIDs[k];
-    double time_k = data->get_y(sample_k, 0);
-    double status_k = data->get_y(sample_k, 1);
+    double time_k = get_y_from_data(sample_k, 0);
+    double status_k = get_y_from_data(sample_k, 1);
     double value_k = data->get_x(sample_k, varID);
 
     // Count samples in left node
@@ -580,8 +580,8 @@ void TreeSurvival::findBestSplitValueAUC(size_t nodeID, size_t varID, double& be
 
     for (size_t l = k + 1; l < end_pos[nodeID]; ++l) {
       size_t sample_l = sampleIDs[l];
-      double time_l = data->get_y(sample_l, 0);
-      double status_l = data->get_y(sample_l, 1);
+      double time_l = get_y_from_data(sample_l, 0);
+      double status_l = get_y_from_data(sample_l, 1);
       double value_l = data->get_x(sample_l, varID);
 
       // Compute split
@@ -897,7 +897,7 @@ void TreeSurvival::findBestSplitValueExtraTreesUnordered(size_t nodeID, size_t v
       if ((splitID & (1ULL << factorID))) {
         ++num_samples_right_child;
         ++delta_samples_at_risk_right_child[survival_timeID];
-        if (data->get_y(sampleID, 1) == 1) {
+        if (get_y_from_data(sampleID, 1) == 1) {
           ++num_deaths_right_child[survival_timeID];
         }
       }
@@ -975,6 +975,8 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
         std::vector<size_t> cr_num_not_cens(num_timepoints, 0);
         //hazard of the 'censoring survival'
         std::vector<double> cens_haz(num_timepoints, 0);
+        // imputed y
+        y_cr.resize(num_timepoints, {0, 0});
 
 
         for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
@@ -1033,6 +1035,15 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                 cens_surv[t] = cens_surv[t-1] * (1.0 - cens_haz[t-1]);
         }
 
+        // impute competing events
+        for (size_t pos = start_pos[nodeID], t = 0; pos < end_pos[nodeID]; ++pos, ++t) {
+            size_t const sampleID = sampleIDs[pos];
+            double const censoring_time = data->get_y(sampleID, 0);
+            if (data->get_y(sampleID, 1) != 1) {
+                y_cr[t][1] = 0;
+                y_cr[t][0] = 0; // TODO: sample here
+            }
+        }
 
         float x = getSubdistributionWeight(8,5);
         std::cout << std::to_string(x) << std::endl;
