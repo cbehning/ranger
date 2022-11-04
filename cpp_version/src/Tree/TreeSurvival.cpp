@@ -975,10 +975,8 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
         std::vector<size_t> cr_num_not_cens(num_timepoints, 0);
         //hazard of the 'censoring survival'
         std::vector<double> cens_haz(num_timepoints, 0);
-        // imputed y
-        y_cr.resize(num_timepoints, {0, 0});
 
-
+        std::unordered_map<size_t, std::vector<size_t>> competing_event_time2sampleIDs;
         for (size_t pos = start_pos[nodeID]; pos < end_pos[nodeID]; ++pos) {
             size_t const sampleID = sampleIDs[pos];
             double const censoring_time = data->get_y(sampleID, 0);
@@ -990,11 +988,15 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
             }
 
             // Now t is the censoring time, add to at risk and to censoring if death
+            int const status = int(data->get_y(sampleID, 1));
             if (t < num_timepoints) {
                 ++cr_num_samples_at_risk[t];
-                if (int(data->get_y(sampleID, 1)) == 0) { // 0=cens, 1 = event of interest
+                if (status == 0) { // 0=cens, 1 = event of interest
                     ++cr_num_cens[t];
                 }
+
+                if (status != 0 and status != 1) // 0=cens, 1 = event of interest
+                    competing_event_time2sampleIDs[t].push_back(sampleID);
             }
         }
         // get number of individuals that are not censored
@@ -1035,13 +1037,18 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
                 cens_surv[t] = cens_surv[t-1] * (1.0 - cens_haz[t-1]);
         }
 
-        // impute competing events
-        for (size_t pos = start_pos[nodeID], t = 0; pos < end_pos[nodeID]; ++pos, ++t) {
-            size_t const sampleID = sampleIDs[pos];
-            double const censoring_time = data->get_y(sampleID, 0);
-            if (data->get_y(sampleID, 1) != 1) {
-                y_cr[t][1] = 0;
-                y_cr[t][0] = 0; // TODO: sample here
+        for (const auto &entry: competing_event_time2sampleIDs) {
+            size_t const &event_time = entry.first;
+            std::vector<size_t> const &sampleIDs = entry.second;
+
+            std::vector<double> weights(num_timepoints, 0);
+            for (size_t t = 0; t < num_timepoints; ++t)
+                weights[t] = getDeltaSubdistributionWeight(t, event_time);
+
+            std::discrete_distribution<size_t> distr{weights.begin(), weights.end()};
+            for (auto const &sampleID: sampleIDs) {
+                double const imputed_time = (*unique_timepoints)[(distr(random_number_generator))];
+                y_cr[sampleID] = imputed_time; /* comment: status 0 is censored*/
             }
         }
 

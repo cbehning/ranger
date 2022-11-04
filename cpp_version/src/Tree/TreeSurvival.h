@@ -13,6 +13,7 @@
 #define TREESURVIVAL_H_
 
 #include <vector>
+#include <unordered_map>
 
 #include "globals.h"
 #include "Tree.h"
@@ -125,11 +126,26 @@ public:
         return getSubdistributionWeight(t-1,T) - getSubdistributionWeight(t,T);
     }
 
+    /**
+     * In a competing risc scenario, we replace y with imputed event time and censoring status zero (based on sub-distribution weighted imputation).
+     * @param sampleID
+     * @param col
+     * @return
+     */
     double get_y_from_data(size_t sampleID, size_t col) const {
-        if (this->cr_impute_subdist)
-            return double(1.0); // TODO: used changed y values
-        else
+        if (this->cr_impute_subdist) {
+            auto const found = y_cr.find(sampleID);
+            if (found != y_cr.end()) { // is only contained if competing event occurs
+                if (col == 0) // imputed subdistribution time
+                    return found->second;
+                else
+                    return 0; // status 0 is censored
+            } else {
+                return data->get_y(sampleID, col);
+            }
+        } else {
             return data->get_y(sampleID, col);
+        }
     };
 
 private:
@@ -147,7 +163,9 @@ private:
   // only for sampling censoring times when competing event happen in root node
   std::vector<double> cens_surv;
 
-  std::vector<std::array<double, 2>> y_cr;
+  // sampleID -> subdistribution time
+  // comment: status is always zero (censored)
+  std::unordered_map<size_t, double> y_cr;
 };
 
 } // namespace ranger
