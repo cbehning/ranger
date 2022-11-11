@@ -94,6 +94,9 @@ double TreeSurvival::computePredictionAccuracyInternal(std::vector<double>* pred
 }
 
 bool TreeSurvival::splitNodeInternal(size_t nodeID, std::vector<size_t>& possible_split_varIDs) {
+  // initialize censoring counts to impute subdist weights
+  if (cr_impute_subdist)
+    computeCensoringCounts(nodeID);
 
   // Stop if node is pure
   bool pure = true;
@@ -112,7 +115,6 @@ bool TreeSurvival::splitNodeInternal(size_t nodeID, std::vector<size_t>& possibl
   }
   if (pure) {
     computeDeathCounts(nodeID);
-    computeCensoringCounts(nodeID);
     computeSurvival(nodeID);
     return true;
   }
@@ -134,7 +136,6 @@ bool TreeSurvival::findBestSplit(size_t nodeID, std::vector<size_t>& possible_sp
   double best_value = 0;
 
   computeDeathCounts(nodeID);
-  computeCensoringCounts(nodeID);
 
   // Stop if maximum node size or depth reached (will check again for each child node)
   if (num_samples_node <= min_node_size || (nodeID >= last_left_nodeID && max_depth > 0 && depth >= max_depth)) {
@@ -190,7 +191,6 @@ bool TreeSurvival::findBestSplitMaxstat(size_t nodeID, std::vector<size_t>& poss
   // Stop if maximum node size or depth reached
   if (num_samples_node <= min_node_size || (nodeID >= last_left_nodeID && max_depth > 0 && depth >= max_depth)) {
     computeDeathCounts(nodeID);
-  computeCensoringCounts(nodeID);
     computeSurvival(nodeID);
     return true;
   }
@@ -292,7 +292,6 @@ bool TreeSurvival::findBestSplitMaxstat(size_t nodeID, std::vector<size_t>& poss
   // Stop and save CHF if no good split found (this is terminal node).
   if (adjusted_best_pvalue > alpha) {
     computeDeathCounts(nodeID);
-      computeCensoringCounts(nodeID);
     computeSurvival(nodeID);
     return true;
   } else {
@@ -689,7 +688,6 @@ bool TreeSurvival::findBestSplitExtraTrees(size_t nodeID, std::vector<size_t>& p
   double best_value = 0;
 
   computeDeathCounts(nodeID);
-    computeCensoringCounts(nodeID);
 
   // Stop if maximum node size or depth reached (will check again for each child node)
   if (num_samples_node <= min_node_size || (nodeID >= last_left_nodeID && max_depth > 0 && depth >= max_depth)) {
@@ -1052,13 +1050,13 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
             }
         }
 
-        float x = getSubdistributionWeight(8,5);
-        std::cout << std::to_string(x) << std::endl;
+        //float x = getSubdistributionWeight(8,5);
+        //std::cout << std::to_string(x) << std::endl;
 
-        float x1 = getDeltaSubdistributionWeight(8,5);
-        std::cout << std::to_string(x1) << std::endl;
+        //float x1 = getDeltaSubdistributionWeight(8,5);
+        //std::cout << std::to_string(x1) << std::endl;
 
-        std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz;cS\n";
+         /*std::string out = "timepoint;atrisk;atriskcens;cens;deaths;notcens;atrisk_mi;cens_haz;cS\n";
         for (size_t i = 0; i < num_timepoints; ++i) {
             out += std::to_string(i) + ";"
                    + std::to_string(cr_num_samples_at_risk[i]) + ";"
@@ -1072,6 +1070,9 @@ void TreeSurvival::addImpurityImportance(size_t nodeID, size_t varID, double dec
 
         }
         std::cout << out << std::endl;
+
         exit(-1);
+          */
+
     }
 } // namespace ranger

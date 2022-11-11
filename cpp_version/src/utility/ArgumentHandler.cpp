@@ -25,7 +25,7 @@ ArgumentHandler::ArgumentHandler(int argc, char **argv) :
         DEFAULT_NUM_THREADS), predall(false), alpha(DEFAULT_ALPHA), minprop(DEFAULT_MINPROP), maxdepth(
         DEFAULT_MAXDEPTH), file(""), impmeasure(DEFAULT_IMPORTANCE_MODE), targetpartitionsize(0), mtry(0), outprefix(
         "ranger_out"), probability(false), splitrule(DEFAULT_SPLITRULE), statusvarname(""), ntree(DEFAULT_NUM_TREE), replace(
-        true), verbose(false), write(false), treetype(TREE_CLASSIFICATION), seed(0), usedepth(false) {
+        true), verbose(false), write(false), treetype(TREE_CLASSIFICATION), seed(0), usedepth(false), cr_impute_subdist(false) {
   this->argc = argc;
   this->argv = argv;
 }
@@ -75,7 +75,7 @@ int ArgumentHandler::processArguments() {
             {"write",               no_argument,       0, 'w'},
             {"treetype",            required_argument, 0, 'y'},
             {"seed",                required_argument, 0, 'z'},
-            {"cr_impute_subdist",   no_argument,       0, 'n'},
+            {"crimputesubdist",   no_argument,       0, 'n'},
 
             {0,                     0,                 0, 0}
     };
@@ -305,6 +305,10 @@ int ArgumentHandler::processArguments() {
         throw std::runtime_error(
             "Illegal argument for option 'mtry'. Please give a positive integer. See '--help' for details.");
       }
+      break;
+
+    case 'n':
+      cr_impute_subdist = true;
       break;
 
     case 'o':
@@ -681,6 +685,7 @@ void ArgumentHandler::displayHelp() {
   std::cout << "    " << "                              MODE = 2: char." << std::endl;
   std::cout << "    " << "                              (Default: 0)" << std::endl;
   std::cout << "    " << "--savemem                     Use memory saving (but slower) splitting mode." << std::endl;
+  std::cout << "    " << "--crimputesubdist             Impute competing risks using subdistribution weights" << std::endl;
   std::cout << std::endl;
 
   std::cout << "See README file for details and examples." << std::endl;
