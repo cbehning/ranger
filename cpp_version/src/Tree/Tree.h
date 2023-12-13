@@ -42,7 +42,8 @@ public:
       std::vector<double>* sample_fraction, double alpha, double minprop, bool holdout, uint num_random_splits,
       uint max_depth, std::vector<double>* regularization_factor, bool regularization_usedepth,
       std::vector<bool>* split_varIDs_used,
-      bool cr_impute_subdist);
+      bool cr_impute_subdist,
+      bool cr_impute_subdist_only_in_root);
 
   virtual void allocateMemory() = 0;
 
@@ -229,6 +230,7 @@ protected:
   uint depth;
   size_t last_left_nodeID;
   bool cr_impute_subdist;
+  bool cr_impute_subdist_only_in_root;
 };
 
 } // namespace ranger

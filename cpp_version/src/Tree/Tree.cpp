@@ -22,7 +22,7 @@ Tree::Tree() :
         false), split_varIDs_used(0), variable_importance(0), importance_mode(DEFAULT_IMPORTANCE_MODE), sample_with_replacement(
         true), sample_fraction(0), memory_saving_splitting(false), splitrule(DEFAULT_SPLITRULE), alpha(DEFAULT_ALPHA), minprop(
         DEFAULT_MINPROP), num_random_splits(DEFAULT_NUM_RANDOM_SPLITS), max_depth(DEFAULT_MAXDEPTH), depth(0), last_left_nodeID(
-        0), cr_impute_subdist(false) {
+        0), cr_impute_subdist(false), cr_impute_subdist_only_in_root(false) {
 }
 
 Tree::Tree(std::vector<std::vector<size_t>>& child_nodeIDs, std::vector<size_t>& split_varIDs,
@@ -33,7 +33,7 @@ Tree::Tree(std::vector<std::vector<size_t>>& child_nodeIDs, std::vector<size_t>&
         0), variable_importance(0), importance_mode(DEFAULT_IMPORTANCE_MODE), sample_with_replacement(true), sample_fraction(
         0), memory_saving_splitting(false), splitrule(DEFAULT_SPLITRULE), alpha(DEFAULT_ALPHA), minprop(
         DEFAULT_MINPROP), num_random_splits(DEFAULT_NUM_RANDOM_SPLITS), max_depth(DEFAULT_MAXDEPTH), depth(0), last_left_nodeID(
-        0), cr_impute_subdist(false) {
+        0), cr_impute_subdist(false), cr_impute_subdist_only_in_root(false) {
 }
 
 void Tree::init(const Data* data, uint mtry, size_t num_samples, uint seed, std::vector<size_t>* deterministic_varIDs,
@@ -41,7 +41,8 @@ void Tree::init(const Data* data, uint mtry, size_t num_samples, uint seed, std:
     bool sample_with_replacement, bool memory_saving_splitting, SplitRule splitrule, std::vector<double>* case_weights,
     std::vector<size_t>* manual_inbag, bool keep_inbag, std::vector<double>* sample_fraction, double alpha,
     double minprop, bool holdout, uint num_random_splits, uint max_depth, std::vector<double>* regularization_factor,
-    bool regularization_usedepth, std::vector<bool>* split_varIDs_used, bool cr_impute_subdist
+    bool regularization_usedepth, std::vector<bool>* split_varIDs_used, bool cr_impute_subdist,
+                bool cr_impute_subdist_only_in_root
 
         ) {
 
@@ -77,6 +78,7 @@ void Tree::init(const Data* data, uint mtry, size_t num_samples, uint seed, std:
   this->regularization_usedepth = regularization_usedepth;
   this->split_varIDs_used = split_varIDs_used;
   this->cr_impute_subdist=cr_impute_subdist;
+  this->cr_impute_subdist_only_in_root=cr_impute_subdist_only_in_root;
 
   // Regularization
   if (regularization_factor->size() > 0) {

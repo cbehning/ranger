@@ -85,6 +85,7 @@ public:
   std::vector<double> regcoef;
   bool usedepth;
   bool cr_impute_subdist;
+  bool cr_impute_subdist_only_in_root;
 
 private:
   // Display messages

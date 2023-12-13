@@ -56,7 +56,8 @@ void run_ranger(const ArgumentHandler& arg_handler, std::ostream& verbose_out) {
       arg_handler.alwayssplitvars, arg_handler.statusvarname, arg_handler.replace, arg_handler.catvars,
       arg_handler.savemem, arg_handler.splitrule, arg_handler.caseweights, arg_handler.predall, arg_handler.fraction,
       arg_handler.alpha, arg_handler.minprop, arg_handler.holdout, arg_handler.predictiontype,
-      arg_handler.randomsplits, arg_handler.maxdepth, arg_handler.regcoef, arg_handler.usedepth, arg_handler.cr_impute_subdist);
+      arg_handler.randomsplits, arg_handler.maxdepth, arg_handler.regcoef, arg_handler.usedepth, arg_handler.cr_impute_subdist,
+                  arg_handler.cr_impute_subdist_only_in_root);
 
   forest->run(true, !arg_handler.skipoob);
   if (arg_handler.write) {

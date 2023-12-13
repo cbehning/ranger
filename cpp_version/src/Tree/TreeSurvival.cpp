@@ -95,7 +95,7 @@ double TreeSurvival::computePredictionAccuracyInternal(std::vector<double>* pred
 
 bool TreeSurvival::splitNodeInternal(size_t nodeID, std::vector<size_t>& possible_split_varIDs) {
   // initialize censoring counts to impute subdist weights
-  if (cr_impute_subdist)
+  if (cr_impute_subdist and (not cr_impute_subdist_only_in_root or this->depth==0))
     computeCensoringCounts(nodeID);
 
   // Stop if node is pure
