@@ -2,12 +2,12 @@
 
 This repository contains an experimental implementation for imputing censoring times for competing event data (see branch https://github.com/cbehning/ranger/tree/competing_risks_subdist). This only affects the random forest for survival outcomes. 
 
-To use the imputation of censoring times in all nodes, the following command can be used (C++ version, not tried from R interface)
+To use the imputation of censoring times in all nodes, the following command can be used (C++ standalone, not tried from R interface)
 
 ```bash
 ./ranger --file data.csv --treetype 5  --crimputesubdist  --depvarname time --statusvarname status
 ```
-To use the imputation of censoring times only in the root nodes, the following command can be used (C++ version, not tried from R interface)
+To use the imputation of censoring times only in the root nodes, the following command can be used
 
 ```bash
 ./ranger --file data.csv --treetype 5  --crimputesubdistonlyinroot --crimputesubdist  --depvarname time --statusvarname status
